@@ -53,6 +53,7 @@ var c_nac = 0;
 var c_name = "";
 var channel_list = [];
 var channel_index = 0;
+var auto_focus = true;       // when true, channel view follows the active call automatically
 var lastChannelData = null;
 var default_channel = null;
 var ws_endpoints = {};
@@ -382,6 +383,37 @@ function channel_update(d) {
                 default_channel = null;
             }
 
+            // Auto-focus: prefer slot with an active call, fall back to hold, then CC.
+            // Voice pool channels occupy indices 1+ in channel_list (CC is always index 0).
+            // Pass 1: slot with current_tgid set — radio is actively transmitting right now.
+            // Pass 2: slot with merged tgid set — call just ended but still in hold period.
+            // Pass 3: all idle — show CC (slot 0).
+            // Skipped entirely when auto_focus=false (toggled off via the AUTO button).
+            if (auto_focus) {
+                var _auto_voice = false;
+                for (var _vi = 1; _vi < channel_list.length; _vi++) {
+                    var _vid = channel_list[_vi];
+                    if (d[_vid] && d[_vid]['current_tgid'] !== null && d[_vid]['current_tgid'] !== undefined) {
+                        channel_index = _vi;
+                        _auto_voice = true;
+                        break;
+                    }
+                }
+                if (!_auto_voice) {
+                    for (var _vi = 1; _vi < channel_list.length; _vi++) {
+                        var _vid = channel_list[_vi];
+                        if (d[_vid] && d[_vid]['tgid'] !== null && d[_vid]['tgid'] !== undefined) {
+                            channel_index = _vi;
+                            _auto_voice = true;
+                            break;
+                        }
+                    }
+                }
+                if (!_auto_voice) {
+                    channel_index = 0;
+                }
+            }
+
             // display channel information
             var c_id = channel_list[channel_index];
             c_system = d[c_id]['system'];
@@ -559,13 +591,13 @@ function channel_table(d) {
 		const isMuted = !(ch in audioChannels) || audioChannels[ch].muted;
 		const audioIcon = hasAudio
 			? (isMuted
-				? `<span title='Play audio' style='cursor:pointer;' onclick='audio_toggle(${ch})'>&#9654;</span>`
-				: `<span title='Stop audio' style='cursor:pointer;' onclick='audio_toggle(${ch})'>&#9646;&#9646;</span>`)
+				? `<span title='Play audio' style='cursor:pointer;' onclick='event.stopPropagation(); audio_toggle(${ch})'>&#9654;</span>`
+				: `<span title='Stop audio' style='cursor:pointer;' onclick='event.stopPropagation(); audio_toggle(${ch})'>&#9646;&#9646;</span>`)
 			: "";
 
-		html += `<tr>
-			<td${tdc} title='Channel ${ch}' style='cursor:pointer;' onclick='f_chan_direct(${ch})'>${ch}</td>
-			<td${tdc} title='${name} 'style='cursor:pointer;' onclick='f_chan_direct(${ch})'>${name}</td>
+		html += `<tr style='cursor:pointer;' onclick='select_channel_by_id(${ch})'>
+			<td${tdc}>${ch}</td>
+			<td>${name}</td>
 			<td style='text-align:center;'>${audioIcon}</td>
 			<td>${system}</td>
 			<td>${freq}</td>
@@ -1669,8 +1701,8 @@ async function send_process() {
     }
 }
 
-function f_chan_direct(command) {
-    channel_index = command;
+function f_chan_button(command) {
+    channel_index += command;
     if (channel_index < 0) {
         channel_index = channel_list.length - 1;
     }
@@ -1679,13 +1711,27 @@ function f_chan_direct(command) {
     }
 }
 
-function f_chan_button(command) {
-    channel_index += command;
-    if (channel_index < 0) {
-        channel_index = channel_list.length - 1;
+function select_channel_by_id(ch_id) {
+    var idx = channel_list.indexOf(String(ch_id));
+    if (idx >= 0) {
+        channel_index = idx;
     }
-    else if (channel_index >= channel_list.length) {
-        channel_index = 0;
+}
+
+function toggle_auto_focus() {
+    auto_focus = !auto_focus;
+    update_auto_btn();
+}
+
+function update_auto_btn() {
+    var btn = document.getElementById('btn-auto-focus');
+    if (!btn) return;
+    if (auto_focus) {
+        btn.textContent = 'AUTO FOCUS: on';
+        btn.style.color = '';
+    } else {
+        btn.textContent = 'AUTO FOCUS: off';
+        btn.style.color = '#f80';
     }
 }
 
@@ -1879,11 +1925,7 @@ function appendCallHistory(sysid, tg1, tg2, tag1, tag2, freq, sourceId1, sourceI
   var epochMs = now.getTime();
 
   // Normalize sysid -> 3-digit hex
-  var sysNum = Number(sysid);
-
-  var sysHex = (!isNaN(sysNum) && sysid !== null && sysid !== "")
-    ? sysNum.toString(16).toUpperCase().padStart(3, "0")
-    : "-";
+  var sysHex = Number(sysid).toString(16).toUpperCase().padStart(3, "0");
 
   // helpers
   function cleanStr(v) {

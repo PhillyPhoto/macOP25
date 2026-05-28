@@ -1868,7 +1868,7 @@ if __name__ == "__main__":
     parser.add_option("--sysid", type="int", default=1,
         help="System ID (Default: 0x000001)")
     parser.add_option("--wacnid", type="int", default=1,
-        help="System ID (Default: 0x000001)")
+        help="WACN ID (Default: 0x000001)")
     parser.add_option("--dst", type="int", default=1,
         help="Destination ID (Default: 0x000001)") 
     parser.add_option("--lsd", type="int", default=0,

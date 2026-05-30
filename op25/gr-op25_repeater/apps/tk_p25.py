@@ -403,6 +403,7 @@ class p25_system(object):
         self.rfss_network_active = None  # RFSS_STS_BCST 'A' bit: 1 = active RFSS link, 0 = failsoft
         self.rfss_lra = None             # Location Registration Area (RFSS/NET_STS octet 2)
         self.sys_service_class = None    # SYS_SRV_BCST 'services available' (24-bit field)
+        self.utc_offset_min = None       # TIME_DATE_ANN local time offset (signed minutes)
         self.ns_syid = int(ast.literal_eval(from_dict(config, "sysid", "0")))
         self.ns_wacn = int(ast.literal_eval(from_dict(config, "wacn", "0")))
         self.ns_chan = 0
@@ -1092,6 +1093,13 @@ class p25_system(object):
             self.sys_service_class = svc_avail
             if self.debug >= 10:
                 sys.stderr.write('%s [%d] tsbk(0x38) sys_srv_bcst: avail: %06x supp: %06x prio: %d\n' % (log_ts.get(), m_rxid, svc_avail, svc_supp, prio))
+        elif opcode == 0x35:   # time and date announcement
+            vl  = (tsbk >> 77) & 0x1    # VL: local time offset field valid (octet 2 bit 5)
+            raw = (tsbk >> 64) & 0xfff  # 12-bit local time offset, msb = subtract-from-UTC
+            if vl:
+                self.utc_offset_min = -(raw & 0x7ff) if (raw >> 11) & 1 else (raw & 0x7ff)
+            if self.debug >= 10:
+                sys.stderr.write('%s [%d] tsbk(0x35) time_date_ann: vl: %d utc_offset_min: %s\n' % (log_ts.get(), m_rxid, vl, self.utc_offset_min))
         else:
             if self.debug >= 10:
                 sys.stderr.write('%s [%d] tsbk(0x%02x) unhandled: 0x%024x\n' % (log_ts.get(), m_rxid, opcode, tsbk))

@@ -401,6 +401,7 @@ class p25_system(object):
         self.rfss_chan = 0
         self.rfss_txchan = 0
         self.rfss_network_active = None  # RFSS_STS_BCST 'A' bit: 1 = active RFSS link, 0 = failsoft
+        self.rfss_lra = None             # Location Registration Area (RFSS/NET_STS octet 2)
         self.ns_syid = int(ast.literal_eval(from_dict(config, "sysid", "0")))
         self.ns_wacn = int(ast.literal_eval(from_dict(config, "wacn", "0")))
         self.ns_chan = 0
@@ -1023,6 +1024,7 @@ class p25_system(object):
             stid = (tsbk >> 40) & 0xff
             chan = (tsbk >> 24) & 0xffff
             net  = (tsbk >> 68) & 0x1   # 'A' bit (octet 3): 1 = active RFSS network connection
+            lra  = (tsbk >> 72) & 0xff  # Location Registration Area (octet 2)
             f1 = self.channel_id_to_frequency(chan)
             if f1:
                 self.rfss_syid = syid
@@ -1031,6 +1033,7 @@ class p25_system(object):
                 self.rfss_chan = f1
                 self.rfss_txchan = f1 + self.freq_table[chan >> 12]['offset']
                 self.rfss_network_active = net
+                self.rfss_lra = lra
                 add_unique_freq(self.cc_list, f1)
             if self.debug >= 10:
                 sys.stderr.write('%s [%d] tsbk(0x3a) rfss_sts_bcst: syid: %x rfid: %x stid: %d A: %d ch1: %x(%s)\n' %(log_ts.get(), m_rxid, syid, rfid, stid, net, chan, self.channel_id_to_string(chan)))
@@ -1055,24 +1058,27 @@ class p25_system(object):
             wacn = (tsbk >> 52) & 0xfffff
             syid = (tsbk >> 40) & 0xfff
             ch1  = (tsbk >> 24) & 0xffff
+            lra  = (tsbk >> 72) & 0xff  # Location Registration Area (octet 2)
             f1 = self.channel_id_to_frequency(ch1)
             if f1:
                 self.ns_syid = syid
                 self.ns_wacn = wacn
                 self.ns_chan = f1
                 self.ns_valid = True
+                self.rfss_lra = lra
             if self.debug >= 10:
-                sys.stderr.write('%s [%d] tsbk(0x3b) net_sts_bcst: wacn: %x syid: %x ch1: %x(%s)\n' %(log_ts.get(), m_rxid, wacn, syid, ch1, self.channel_id_to_string(ch1)))
+                sys.stderr.write('%s [%d] tsbk(0x3b) net_sts_bcst: wacn: %x syid: %x lra: %x ch1: %x(%s)\n' %(log_ts.get(), m_rxid, wacn, syid, lra, ch1, self.channel_id_to_string(ch1)))
         elif opcode == 0x3c:   # adjacent status
             rfid = (tsbk >> 48) & 0xff
             stid = (tsbk >> 40) & 0xff
             ch1  = (tsbk >> 24) & 0xffff
             cfva = (tsbk >> 68) & 0xf   # octet-3 signaling: C(onventional) F(ailure) V(alid) A(ctive net)
+            lra  = (tsbk >> 72) & 0xff  # Location Registration Area (octet 2)
             table = (ch1 >> 12) & 0xf
             f1 = self.channel_id_to_frequency(ch1)
             if f1 and table in self.freq_table:
                 self.adjacent[f1] = 'rfid: %d stid:%d uplink:%f tbl:%d' % (rfid, stid, (f1 + self.freq_table[table]['offset']) / 1000000.0, table)
-                self.adjacent_data[f1] = {'rfid': rfid, 'stid':stid, 'uplink': f1 + self.freq_table[table]['offset'], 'table': table,
+                self.adjacent_data[f1] = {'rfid': rfid, 'stid':stid, 'uplink': f1 + self.freq_table[table]['offset'], 'table': table, 'lra': lra,
                                           'conventional': (cfva >> 3) & 1, 'failure': (cfva >> 2) & 1, 'valid': (cfva >> 1) & 1, 'active': cfva & 1}
             if self.debug >= 10:
                 sys.stderr.write('%s [%d] tsbk(0x3c) adj_sts_bcst: rfid: %x stid: %d C: %d F: %d V: %d A: %d ch1: %x(%s)\n' %(log_ts.get(), m_rxid, rfid, stid, (cfva >> 3) & 1, (cfva >> 2) & 1, (cfva >> 1) & 1, cfva & 1, ch1, self.channel_id_to_string(ch1)))
@@ -1891,6 +1897,7 @@ class p25_system(object):
         d['txchan']         = self.rfss_txchan
         d['wacn']           = self.ns_wacn
         d['network_active'] = self.rfss_network_active  # 0 == site running failsoft (RFSS_STS_BCST 'A' bit)
+        d['lra']            = self.rfss_lra
         d['secondary']      = list(self.secondary.keys())
         d['frequencies']    = {}
         d['frequency_data'] = {}

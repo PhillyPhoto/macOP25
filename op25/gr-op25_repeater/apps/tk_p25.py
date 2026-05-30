@@ -975,8 +975,9 @@ class p25_system(object):
             self.freq_table[iden]['offset'] = toff * spac * 125
             self.freq_table[iden]['step'] = spac * 125
             self.freq_table[iden]['frequency'] = freq * 5
+            self.freq_table[iden]['bw'] = bwvu   # 0x04 = 6.25 kHz, 0x05 = 12.5 kHz (TIA-102.AABC-B 6.2.29)
             if self.debug >= 10:
-                sys.stderr.write('%s [%d] tsbk(0x34) iden_up_vu: id: %d toff: %f spac: %f freq: %f [%s]\n' % (log_ts.get(), m_rxid, iden, toff * spac * 0.125 * 1e-3, spac * 0.125, freq * 0.000005, txt[toff_sign]))
+                sys.stderr.write('%s [%d] tsbk(0x34) iden_up_vu: id: %d toff: %f spac: %f freq: %f bw: %x [%s]\n' % (log_ts.get(), m_rxid, iden, toff * spac * 0.125 * 1e-3, spac * 0.125, freq * 0.000005, bwvu, txt[toff_sign]))
         elif opcode == 0x33:   # iden_up_tdma
             mfrid  = (tsbk >> 80) & 0xff
             if mfrid == 0:
@@ -1012,8 +1013,9 @@ class p25_system(object):
             self.freq_table[iden]['offset'] = toff * 250000
             self.freq_table[iden]['step'] = spac * 125
             self.freq_table[iden]['frequency'] = freq * 5
+            self.freq_table[iden]['bw'] = bw   # channel bandwidth (TIA-102.AABC-B 6.2.9, 125 Hz units)
             if self.debug >= 10:
-                sys.stderr.write('%s [%d] tsbk(0x3d) iden_up id: %d toff: %f spac: %f freq: %f\n' % (log_ts.get(), m_rxid, iden, toff * 0.25, spac * 0.125, freq * 0.000005))
+                sys.stderr.write('%s [%d] tsbk(0x3d) iden_up id: %d toff: %f spac: %f freq: %f bw: %x\n' % (log_ts.get(), m_rxid, iden, toff * 0.25, spac * 0.125, freq * 0.000005, bw))
         elif opcode == 0x3a:   # rfss status
             syid = (tsbk >> 56) & 0xfff
             rfid = (tsbk >> 48) & 0xff

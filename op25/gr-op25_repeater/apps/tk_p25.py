@@ -402,6 +402,7 @@ class p25_system(object):
         self.rfss_txchan = 0
         self.rfss_network_active = None  # RFSS_STS_BCST 'A' bit: 1 = active RFSS link, 0 = failsoft
         self.rfss_lra = None             # Location Registration Area (RFSS/NET_STS octet 2)
+        self.sys_service_class = None    # SYS_SRV_BCST 'services available' (24-bit field)
         self.ns_syid = int(ast.literal_eval(from_dict(config, "sysid", "0")))
         self.ns_wacn = int(ast.literal_eval(from_dict(config, "wacn", "0")))
         self.ns_chan = 0
@@ -1084,6 +1085,13 @@ class p25_system(object):
                 sys.stderr.write('%s [%d] tsbk(0x3c) adj_sts_bcst: rfid: %x stid: %d C: %d F: %d V: %d A: %d ch1: %x(%s)\n' %(log_ts.get(), m_rxid, rfid, stid, (cfva >> 3) & 1, (cfva >> 2) & 1, (cfva >> 1) & 1, cfva & 1, ch1, self.channel_id_to_string(ch1)))
                 if table in self.freq_table:
                     sys.stderr.write('%s [%d] tsbk(0x3c) adj_sts_bcst: base freq: %s step: %s\n' % (log_ts.get(), m_rxid, self.freq_table[table]['frequency'] , self.freq_table[table]['step'] ))
+        elif opcode == 0x38:   # system service broadcast
+            svc_avail = (tsbk >> 48) & 0xffffff  # services available (octets 3-5)
+            svc_supp  = (tsbk >> 24) & 0xffffff  # services supported (octets 6-8)
+            prio      = (tsbk >> 16) & 0xff       # request priority level (octet 9)
+            self.sys_service_class = svc_avail
+            if self.debug >= 10:
+                sys.stderr.write('%s [%d] tsbk(0x38) sys_srv_bcst: avail: %06x supp: %06x prio: %d\n' % (log_ts.get(), m_rxid, svc_avail, svc_supp, prio))
         else:
             if self.debug >= 10:
                 sys.stderr.write('%s [%d] tsbk(0x%02x) unhandled: 0x%024x\n' % (log_ts.get(), m_rxid, opcode, tsbk))

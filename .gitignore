@@ -2,5 +2,5 @@
 build/
 *.pyc
 
-# macOS: gr-osmosdr built from source by install-mac.sh
+# macOS: gr-osmosdr built from source by mac-install.sh
 deps/

@@ -7,10 +7,10 @@ A macOS-compatible fork of [boatbod/op25](https://github.com/boatbod/op25), targ
 1. Install [Homebrew](https://brew.sh) if you don't already have it.
 2. From the top level of this repo, run:
    ```
-   ./install-mac.sh
+   ./mac-install.sh
    ```
    This installs GNU Radio and its dependencies via Homebrew, builds [gr-osmosdr](https://github.com/gqrx-sdr/gr-osmosdr) from source (no Homebrew formula exists for it), and then builds and installs macOP25 itself.
-3. If you have both a native (`/opt/homebrew`) and Rosetta/x86_64 (`/usr/local`) Homebrew installed, `install-mac.sh` prefers the native one automatically; override with `./install-mac.sh -p /path/to/homebrew/prefix` if needed.
+3. If you have both a native (`/opt/homebrew`) and Rosetta/x86_64 (`/usr/local`) Homebrew installed, `mac-install.sh` prefers the native one automatically; override with `./mac-install.sh -p /path/to/homebrew/prefix` if needed.
 
 Notes on macOS-specific differences from the Linux instructions below:
 - `install.sh`/`arch-install.sh` (apt/pacman) and `blacklist-rtl.conf`/`update-rtlsdr.sh` (Linux kernel module / udev tooling) are Linux-only and not used on macOS.

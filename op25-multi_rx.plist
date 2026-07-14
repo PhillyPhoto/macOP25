@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS launchd equivalent of op25-multi_rx.service.
+
+  Edit the WorkingDirectory and paths below to match your checkout, then
+  install with:
+    cp op25-multi_rx.plist ~/Library/LaunchAgents/com.macop25.multi_rx.plist
+    launchctl load ~/Library/LaunchAgents/com.macop25.multi_rx.plist
+  Uninstall with:
+    launchctl unload ~/Library/LaunchAgents/com.macop25.multi_rx.plist
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.macop25.multi_rx</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>op25-multi_rx.sh</string>
+	</array>
+	<key>WorkingDirectory</key>
+	<string>/Users/YOUR_USERNAME/macOP25/op25/gr-op25_repeater/apps</string>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/tmp/op25-multi_rx.log</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/op25-multi_rx.err</string>
+</dict>
+</plist>

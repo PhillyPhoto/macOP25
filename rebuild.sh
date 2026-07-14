@@ -23,5 +23,9 @@ cd build
 rm -rf *
 cmake ../ $BUILD_TYPE 2>&1 | tee cmake.log
 make                  2>&1 | tee make.log
-sudo make install     2>&1 | tee install.log
-sudo ldconfig
+if [ "$(uname)" = "Darwin" ]; then
+    make install 2>&1 | tee install.log
+else
+    sudo make install 2>&1 | tee install.log
+    sudo ldconfig
+fi

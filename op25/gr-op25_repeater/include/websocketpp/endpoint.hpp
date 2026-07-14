@@ -113,8 +113,11 @@ public:
 
     #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
         // no copy constructor because endpoints are not copyable
-        endpoint(endpoint &) = delete;
-    
+        // NOTE: parameter must be const to satisfy libc++'s stricter
+        // defaulted-copy-constructor rules when this type appears as a
+        // std::pair/std::map value (see zaphoyd/websocketpp#794, PR #1081)
+        endpoint(const endpoint &) = delete;
+
         // no copy assignment operator because endpoints are not copyable
         endpoint & operator=(endpoint const &) = delete;
     #endif // _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_

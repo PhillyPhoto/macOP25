@@ -1,3 +1,24 @@
+# macOP25
+
+A macOS-compatible fork of [boatbod/op25](https://github.com/boatbod/op25), targeting GNU Radio 3.10 via Homebrew on Apple Silicon and Intel Macs. All P25/DMR/SmartNet decoding functionality below is unchanged from upstream; only the build system and install tooling have been adapted for macOS.
+
+## Building on macOS
+
+1. Install [Homebrew](https://brew.sh) if you don't already have it.
+2. From the top level of this repo, run:
+   ```
+   ./install-mac.sh
+   ```
+   This installs GNU Radio and its dependencies via Homebrew, builds [gr-osmosdr](https://github.com/gqrx-sdr/gr-osmosdr) from source (no Homebrew formula exists for it), and then builds and installs macOP25 itself.
+3. If you have both a native (`/opt/homebrew`) and Rosetta/x86_64 (`/usr/local`) Homebrew installed, `install-mac.sh` prefers the native one automatically; override with `./install-mac.sh -p /path/to/homebrew/prefix` if needed.
+
+Notes on macOS-specific differences from the Linux instructions below:
+- `install.sh`/`arch-install.sh` (apt/pacman) and `blacklist-rtl.conf`/`update-rtlsdr.sh` (Linux kernel module / udev tooling) are Linux-only and not used on macOS.
+- `op25-multi_rx.service` (systemd) has a macOS equivalent in `op25-multi_rx.plist` (launchd); see the comments in that file for install steps.
+- No `sudo`/`ldconfig` is needed on macOS — Homebrew prefixes are user-writable and there's no shared library cache to refresh.
+
+---
+
 # This is the boatbod fork of op25.  
 
 Capabilities are broadly categorized into two lists - those supported by the legacy `rx.py` version of the app and those by the newer `multi_rx.py` version.  I recommend using `multi_rx.py` where at all possible as this is the focus of future development.

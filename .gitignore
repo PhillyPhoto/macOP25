@@ -1,3 +1,6 @@
 # Untracked files in op25 hierachy
 build/
 *.pyc
+
+# macOS: gr-osmosdr built from source by install-mac.sh
+deps/

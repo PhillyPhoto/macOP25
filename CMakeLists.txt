@@ -1,15 +1,13 @@
 ########################################################################
 # Project setup
 ########################################################################
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5)
 project(gr-op25 CXX C)
 enable_testing()
 
 #policy setup
 cmake_policy(SET CMP0011 NEW)
 cmake_policy(SET CMP0012 NEW)
-cmake_policy(SET CMP0026 OLD)
-cmake_policy(SET CMP0045 OLD)
 
 set_property(GLOBAL PROPERTY ALLOW_DUPLICATE_CUSTOM_TARGETS 1)
 
@@ -140,20 +138,21 @@ else()
     set(OP25_PYTHON_VER 3)
 endif()
 MESSAGE(STATUS "Configuring for Python ${OP25_PYTHON_VER}")
-if(NOT EXISTS /usr/include/spdlog/fmt/bundled)
+if(APPLE OR NOT EXISTS /usr/include/spdlog/fmt/bundled)
+  # Homebrew's spdlog is always built against an external fmt package
   ADD_DEFINITIONS(-DSPDLOG_FMT_EXTERNAL=1)
 endif()
 
 execute_process(COMMAND python${OP25_PYTHON_VER} -c "
 import os
 import sys
-from distutils import sysconfig
-pfx = '/usr/local'
+import sysconfig
+pfx = '${CMAKE_INSTALL_PREFIX}'
 m1 = os.path.join('lib', 'python' + '.'.join(sys.version.split('.')[:2]), 'dist-packages')
-m2 = sysconfig.get_python_lib(plat_specific=True, prefix='')
+m2 = sysconfig.get_path('platlib', vars={'platbase': '', 'base': ''}).lstrip(os.sep)
 f1 = os.path.join(pfx, m1)
 f2 = os.path.join(pfx, m2)
-ok2 = f2 in sys.path
+ok2 = f2 in sys.path or os.path.isdir(f2)
 if ok2:
 	print(m2)
 else:

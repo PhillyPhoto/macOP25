@@ -76,7 +76,8 @@ public:
 
 #ifdef _WEBSOCKETPP_DEFAULT_DELETE_FUNCTIONS_
     // no copy constructor because endpoints are not copyable
-    server<config>(server<config> &) = delete;
+    // NOTE: parameter must be const, see endpoint.hpp for details
+    server<config>(const server<config> &) = delete;
 
     // no copy assignment operator because endpoints are not copyable
     server<config> & operator=(server<config> const &) = delete;

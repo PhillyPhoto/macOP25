@@ -43,11 +43,27 @@ elif [ "$(uname -m)" = "arm64" ] && [ -x /opt/homebrew/bin/brew ]; then
     BREW=/opt/homebrew/bin/brew
 elif command -v brew >/dev/null 2>&1; then
     BREW="$(command -v brew)"
+elif [ -x /usr/local/bin/brew ]; then
+    BREW=/usr/local/bin/brew
 else
-    echo "====== error, Homebrew not found."
-    echo "====== install it from https://brew.sh and re-run this script"
-    exit 1
+    echo "====== Homebrew not found, installing it now"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [ "$(uname -m)" = "arm64" ] && [ -x /opt/homebrew/bin/brew ]; then
+        BREW=/opt/homebrew/bin/brew
+    elif [ -x /usr/local/bin/brew ]; then
+        BREW=/usr/local/bin/brew
+    else
+        echo "====== error, Homebrew install did not complete; re-run this script"
+        exit 1
+    fi
 fi
+
+# Make sure this script's own environment (not just interactive shells) has
+# Homebrew's bin directory on PATH, since the rest of the script invokes
+# cmake/make etc. by bare name. Without this, a just-installed Homebrew
+# (whose shellenv line hasn't been sourced into any shell yet) leaves those
+# commands unresolvable even though brew installed them successfully.
+eval "$("$BREW" shellenv bash)"
 PREFIX="$("$BREW" --prefix)"
 echo "Using Homebrew at $PREFIX"
 
